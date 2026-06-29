@@ -184,7 +184,7 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
 
   Widget _buildCalendarPageView() {
     return SizedBox(
-      height: 350,
+      height: widget.option?.calendarHeight,
       child: PageView.builder(
         itemCount: 2400, // 200 years * 12 months
         controller: _pageController,
@@ -219,8 +219,10 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
       int startingWeekday, int pageIndex) {
     return GridView.builder(
       key: PageStorageKey(pageIndex),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 7, mainAxisSpacing: 5, mainAxisExtent: 50),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 7,
+          mainAxisSpacing: 5,
+          mainAxisExtent: widget.option?.daysExtent),
       itemCount: daysInMonth + (startingWeekday - 1),
       shrinkWrap: true,
       itemBuilder: (context, index) {
@@ -270,14 +272,15 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
                         ? widget.option?.selectedDayShapeColor ??
                             themeData.primaryColor
                         : null,
+                    border: isToday ? widget.option?.todayBoxBorder : null,
                   ),
                   child: Center(
-                    child: Text(
-                      '${date.day}',
-                      style: widget.option?.daysStyle
-                              ?.copyWith(color: styleColor) ??
-                          TextStyle(color: styleColor),
-                    ),
+                    child: Text('${date.day}',
+                        style: (isToday
+                                    ? widget.option?.todayStyle
+                                    : widget.option?.daysStyle)
+                                ?.copyWith(color: styleColor) ??
+                            TextStyle(color: styleColor)),
                   ),
                 ),
               ),
