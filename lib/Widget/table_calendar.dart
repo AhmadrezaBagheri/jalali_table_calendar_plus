@@ -251,21 +251,21 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
                   : date.weekDay == 7 || isHolyDay
                       ? Colors.red
                       : null;
-          return Stack(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  if (widget.range) {
-                    setRange(date);
-                  }
-                  if (widget.onDaySelected != null) {
-                    widget.onDaySelected!(date, dayEvents(date.toDateTime()));
-                  }
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                },
-                child: Container(
+          return GestureDetector(
+            onTap: () {
+              if (widget.range) {
+                setRange(date);
+              }
+              if (widget.onDaySelected != null) {
+                widget.onDaySelected!(date, dayEvents(date.toDateTime()));
+              }
+              setState(() {
+                _selectedDate = date;
+              });
+            },
+            child: Stack(
+              children: [
+                Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isSelected
@@ -283,9 +283,9 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
                             TextStyle(color: styleColor)),
                   ),
                 ),
-              ),
-              if (marker != null) marker,
-            ],
+                if (marker != null) marker,
+              ],
+            ),
           );
         }
       },
