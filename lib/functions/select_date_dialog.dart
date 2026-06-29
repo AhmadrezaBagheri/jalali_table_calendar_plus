@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import 'package:jalali_table_calendar_plus/jalali_table_calendar_plus.dart';
 
 Future<DateTime?> pickDate({
@@ -34,7 +35,8 @@ class _TableCalendarPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width / 100;
     double height = MediaQuery.of(context).size.height / 100;
-    DateTime? selectedDate;
+    Jalali? selectedDate;
+    List<dynamic>? selectedEvents;
     return Dialog(
       insetPadding:
           EdgeInsets.symmetric(vertical: height * 25, horizontal: width * 5),
@@ -51,14 +53,15 @@ class _TableCalendarPicker extends StatelessWidget {
                 events: events,
                 useOfficialHolyDays: useOfficialHolyDays,
                 marker: marker,
-                onDaySelected: (date) {
+                onDaySelected: (date, events) {
                   selectedDate = date;
+                  selectedEvents = events;
                 },
               ),
             ),
             ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, selectedDate);
+                  Navigator.pop(context, [selectedDate, selectedEvents]);
                 },
                 child: const Text('تایید'))
           ],

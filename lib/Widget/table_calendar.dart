@@ -5,7 +5,8 @@ import 'package:shamsi_date/shamsi_date.dart';
 
 part 'package:jalali_table_calendar_plus/Utils/select_year_month.dart';
 
-typedef OnDaySelected = void Function(DateTime day);
+typedef OnMonthChanged = void Function(Jalali date);
+typedef OnDaySelected = void Function(Jalali day, List<dynamic> events);
 typedef MarkerBuilder = Widget? Function(DateTime date, List<dynamic> events);
 typedef RangeDates = void Function(List<DateTime> dates);
 
@@ -14,6 +15,7 @@ class JalaliTableCalendar extends StatefulWidget {
     super.key,
     this.direction = TextDirection.rtl,
     this.onDaySelected,
+    this.onMonthChanged,
     this.marker,
     this.events,
     this.onRangeSelected,
@@ -27,6 +29,7 @@ class JalaliTableCalendar extends StatefulWidget {
   final TextDirection direction;
   final MarkerBuilder? marker;
   final OnDaySelected? onDaySelected;
+  final OnMonthChanged? onMonthChanged;
   final RangeDates? onRangeSelected;
   final Map<DateTime, List>? events;
   final bool range;
@@ -190,6 +193,7 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
             int year = 1304 + (page ~/ 12);
             int month = (page % 12) + 1;
             _selectedPage = Jalali(year, month, 1);
+            widget.onMonthChanged?.call(_selectedPage);
           });
         },
         itemBuilder: (context, index) {
@@ -199,15 +203,22 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
           int daysInMonth = firstDayOfMonth.monthLength;
           int startingWeekday =
               firstDayOfMonth.weekDay; // 1 (Saturday) - 7 (Friday)
-          return _buildGridView(year, month, daysInMonth, startingWeekday);
+          return _buildGridView(
+            year,
+            month,
+            daysInMonth,
+            startingWeekday,
+            index,
+          );
         },
       ),
     );
   }
 
-  Widget _buildGridView(
-      int year, int month, int daysInMonth, int startingWeekday) {
+  Widget _buildGridView(int year, int month, int daysInMonth,
+      int startingWeekday, int pageIndex) {
     return GridView.builder(
+      key: PageStorageKey(pageIndex),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 7, mainAxisSpacing: 5, mainAxisExtent: 50),
       itemCount: daysInMonth + (startingWeekday - 1),
@@ -219,7 +230,7 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
           ); // Empty cell
         } else {
           int day = index - (startingWeekday - 2);
-          if (day > _selectedDate.monthLength) {
+          if (day > _selectedDate.monthLength && month == _selectedDate.month) {
             day = _selectedDate.monthLength;
           }
           Jalali date = Jalali(year, month, day);
@@ -246,7 +257,7 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
                     setRange(date);
                   }
                   if (widget.onDaySelected != null) {
-                    widget.onDaySelected!(date.toDateTime());
+                    widget.onDaySelected!(date, dayEvents(date.toDateTime()));
                   }
                   setState(() {
                     _selectedDate = date;
