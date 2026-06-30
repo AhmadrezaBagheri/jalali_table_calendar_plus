@@ -43,14 +43,37 @@ class JalaliTableCalendar extends StatefulWidget {
 }
 
 class JalaliTableCalendarState extends State<JalaliTableCalendar> {
+  static const List<String> _monthNames = [
+    'فروردین',
+    'اردیبهشت',
+    'خرداد',
+    'تیر',
+    'مرداد',
+    'شهریور',
+    'مهر',
+    'آبان',
+    'آذر',
+    'دی',
+    'بهمن',
+    'اسفند',
+  ];
+  static const List<String> _daysOfWeek = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+  static final List<HolyDay> _fixedHolyDays = [
+    HolyDay(month: 01, day: 1),
+    HolyDay(month: 01, day: 2),
+    HolyDay(month: 01, day: 3),
+    HolyDay(month: 01, day: 4),
+    HolyDay(month: 01, day: 12),
+    HolyDay(month: 01, day: 13),
+    HolyDay(month: 03, day: 14),
+    HolyDay(month: 03, day: 15),
+  ];
+  final Map<DateTime, List<dynamic>> _dayEventsCache = {};
+
   Jalali? _startSelectDate;
-
   Jalali? _endSelectDate;
-
   late Jalali _selectedDate;
-
   late Jalali _selectedPage;
-
   late PageController _pageController;
   late ThemeData themeData;
 
@@ -96,20 +119,6 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
   }
 
   Widget _buildHeader() {
-    final List<String> monthNames = [
-      'فروردین',
-      'اردیبهشت',
-      'خرداد',
-      'تیر',
-      'مرداد',
-      'شهریور',
-      'مهر',
-      'آبان',
-      'آذر',
-      'دی',
-      'بهمن',
-      'اسفند',
-    ];
     bool showHeaderArrows = widget.option?.showHeaderArrows ?? true;
     return Container(
       padding: widget.option?.headerPadding ?? const EdgeInsets.all(16.0),
@@ -142,7 +151,7 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
               }
             },
             child: Text(
-              '${monthNames[_selectedPage.month - 1]} ${_selectedPage.year}',
+              '${_monthNames[_selectedPage.month - 1]} ${_selectedPage.year}',
               style:
                   widget.option?.headerStyle ?? const TextStyle(fontSize: 20.0),
             ),
@@ -162,16 +171,15 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
   }
 
   Widget _buildDaysOfWeek() {
-    List<String> daysOfWeek = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: List.generate(7, (index) {
-        final fridayColor = daysOfWeek[index] == 'ج' ? Colors.red : null;
+        final fridayColor = _daysOfWeek[index] == 'ج' ? Colors.red : null;
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 5.0),
           child: Center(
             child: Text(
-              widget.option?.daysOfWeekTitles?[index] ?? daysOfWeek[index],
+              widget.option?.daysOfWeekTitles?[index] ?? _daysOfWeek[index],
               style: widget.option?.daysOfWeekStyle
                       ?.copyWith(color: fridayColor) ??
                   TextStyle(color: fridayColor),
@@ -293,15 +301,11 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
   }
 
   List<dynamic> dayEvents(DateTime date) {
-    List events = [];
-    widget.events?.forEach(
-      (key, value) {
-        if (key == date) {
-          events.add({key, value});
-        }
-      },
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    return _dayEventsCache.putIfAbsent(
+      normalizedDate,
+      () => widget.events?[normalizedDate] ?? const [],
     );
-    return events;
   }
 
   bool _isSelectedDay(Jalali date) {
@@ -358,18 +362,14 @@ class JalaliTableCalendarState extends State<JalaliTableCalendar> {
   }
 
   bool _isHolyDay(Jalali date) {
-    List<HolyDay> holyDays = [
-      HolyDay(month: 01, day: 1),
-      HolyDay(month: 01, day: 2),
-      HolyDay(month: 01, day: 3),
-      HolyDay(month: 01, day: 4),
-      HolyDay(month: 01, day: 12),
-      HolyDay(month: 01, day: 13),
-      HolyDay(month: 03, day: 14),
-      HolyDay(month: 03, day: 15),
-    ];
-    holyDays.addAll(widget.customHolyDays);
-    for (HolyDay holyDay in holyDays) {
+    for (final HolyDay holyDay in _fixedHolyDays) {
+      if ((holyDay.year == 0 || holyDay.year == date.year) &&
+          holyDay.month == date.month &&
+          holyDay.day == date.day) {
+        return true;
+      }
+    }
+    for (final HolyDay holyDay in widget.customHolyDays) {
       if ((holyDay.year == 0 || holyDay.year == date.year) &&
           holyDay.month == date.month &&
           holyDay.day == date.day) {
